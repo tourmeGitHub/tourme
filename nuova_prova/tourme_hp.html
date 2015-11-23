@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+
+</head>
+<body>
+
+<style>
+    #center_panel
+    {
+        margin-top: 30px;
+    }
+
+    #center_text
+    {
+        margin-top: 50px;
+        margin-bottom: 0px;
+    }
+
+    #start_text
+    {
+        margin-bottom: 0px;
+    }
+
+    #end_loc
+    {
+        margin-top: 0px;
+        margin-bottom: 0px;
+    }
+
+    #start_loc
+    {
+        margin-top: 0px;
+        margin-bottom: 0px;
+    }
+
+    #end_text
+    {
+        margin-bottom: 0px;
+    }
+
+</style>
+
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3.exp&amp;sensor=false&amp;libraries=places"></script>
+
+<div align="center" id="center_text">
+    <object width="20%" height="auto" data="logo.svg" type="image/svg+xml"></object>
+    </div>
+
+
+<div style="color:#000000" align="center" id="center_panel">
+    <p align="center" style="font-size:40px" id="title_text">Cosa vuoi fare?</p>
+    <form name="form" id="form" action="calc_interest_points.html" method="get">
+        <p align="center" style="font-size:30px" id="start_text">Partenza</p>
+        <input type="text" name="start_loc"  id="start_loc" style="width: 300px;height: 20px;"/><br>
+        <p align="center" style="font-size:30px" id="end_text">Arrivo</p>
+        <input type="text" name="end_loc" id="end_loc" style="width: 300px;height: 20px;" /><br>
+        <input type="submit" value="Invia" class="submit" style="font-family: 'bariol'; height: 50px; width: 70px"/>
+    </form>
+
+</div>
+
+<script type="text/javascript">
+    var input = document.getElementById('start_loc');
+    var input1 = document.getElementById('end_loc');
+
+
+    var searchform = document.getElementById('form');
+    var searchform = document.getElementById('form');
+    var place;
+    var autocomplete = new google.maps.places.Autocomplete(input);
+    var autocomplete1 = new google.maps.places.Autocomplete(input1);
+
+    //Google Map variables
+    var map;
+    var marker;
+
+    //Add listener to detect autocomplete selection
+    google.maps.event.addListener(autocomplete, 'place_changed', function () {
+        place = autocomplete.getPlace();
+
+        //console.log(place);
+    });
+
+    //Add listener to detect autocomplete selection
+    google.maps.event.addListener(autocomplete1, 'place_changed', function () {
+        place1 = autocomplete1.getPlace();
+        //console.log(place);
+    });
+
+    //Add listener to search
+    searchform.addEventListener("submit", function() {
+
+        var newlatlong1 = new google.maps.LatLng(place.geometry.location.lat(),place.geometry.location.lng());
+        var newlatlong2 = new google.maps.LatLng(place1.geometry.location.lat(),place1.geometry.location.lng());
+        //window.alert(newlatlong1);
+
+        //map.setCenter(newlatlong);
+        //marker.setPosition(newlatlong);
+        //map.setZoom(12);
+
+    });
+
+    //Reset the inpout box on click
+    input.addEventListener('click', function(){
+        input.value = "";
+    });
+</script>
+
+</body>
+</html>
