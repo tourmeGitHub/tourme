@@ -121,6 +121,30 @@ function createJsonFromResponse($response_json)
     return json_encode($output_json);
 }
 
+function extractLocations($response_json)
+{
+    // output
+    $locations = [];
+
+    // number of steps
+    $num_steps = count($response_json['routes'][0]['legs'][0]['steps']);
+
+    for($i = 0; $i<$num_steps; $i++)
+    {
+        $locations[$i] = array("Lat" => $response_json['routes'][0]['legs'][0]['steps'][$i]['start_location']['lat'],
+                              "Lon" => $response_json['routes'][0]['legs'][0]['steps'][$i]['start_location']['lng']);
+    }
+
+    // add final location
+    $locations[$num_steps] = array(
+        "Lat" => $response_json['routes'][0]['legs'][0]['steps'][$num_steps-1]['end_location']['lat'],
+        "Lon" => $response_json['routes'][0]['legs'][0]['steps'][$num_steps-1]['end_location']['lng']
+    );
+
+    return $locations;
+
+}
+
 function get_driving_information($start, $finish)
 {
     if (strcmp($start, $finish) != 0) {
@@ -134,7 +158,6 @@ function get_driving_information($start, $finish)
 
         // decode the json
         $resp = json_decode($resp_json, true);
-        //echo json_encode($resp);
         return $resp;
     }
 
@@ -180,8 +203,9 @@ function find_interest_points($LongestSteps){
     $num_steps= count($LongestSteps);
     //echo "count " .count($LongestSteps) ."<br>";
     //$interest_points = array();
-    $fields=array('Lat','Lon');
-    $interest_points = array_fill_keys($fields, '');
+    /*$fields=array('Lat','Lon');
+    $interest_points = array_fill_keys($fields, '');*/
+    $interest_points = [];
     $count = 0;
 
     for ($i = 0; $i < $num_steps; $i++)
@@ -200,40 +224,18 @@ function find_interest_points($LongestSteps){
         $mid_lat=$midpoint['mid_lat'];
         $mid_lon=$midpoint['mid_lon'];
 
-        if($count+1<8) {
-            $interest_points[$count] = array("Lat" => $mid_lat, "Lon" => $mid_lon);
-            $count++;
-        }
+        //if($count+1<8) {
+  /*          $interest_points[$count] = array("Lat" => $mid_lat, "Lon" => $mid_lon);
+            $count++;*/
+        //}
 
         // DB Connection
         $db = new mysqli('localhost', 'root', '', 'prova'); // use your credentials
+        $db_pow = new mysqli('localhost', 'root', '', 'prova');
         if ($db->connect_errno)
         {
-            //printf("Connect failed: %s\n", $db->connect_error);
             exit();
         }
-
-
-        // prepare query
-//        $sql =
-//            "(SELECT idNode,Lon,Lat, (1000*6371 * acos (cos ( radians(".$mid_lat.") ) * cos( radians( Lat ) ) * cos( radians( Lon ) - radians(".$mid_lon.") ) + sin ( radians(".$mid_lat.") )
-//                * sin( radians( Lat ) )
-//            )) AS distance
-//            FROM node
-//            HAVING distance <" .$LongestSteps [$i]['radius']/2 ."
-//            ORDER BY distance
-//            LIMIT 0 , 20)";
-
-
-//  $sql =
-//                "(SELECT idNode,Lon,Lat, (1000*60*1.1515*1.609344*degrees(
-//                acos(sin(radians(Lat))*sin(radians(" .$mid_lat. "))+
-//                cos(radians(Lat))*cos(radians(" .$mid_lat. "))*cos(radians(Lon-" .$mid_lon."))
-//                ))) AS distance
-//                FROM node
-//                HAVING distance <" .$LongestSteps [$i]['radius']/2 . "
-//                ORDER BY distance
-//                LIMIT 0 , 20)";
 
      $sql =
              "(SELECT idNode,Lon,Lat, (1000*60*1.1515*1.609344*degrees(
@@ -242,37 +244,31 @@ function find_interest_points($LongestSteps){
              ))) AS distance
              FROM node
              ORDER BY distance
-             LIMIT 0 , 20)";
+             LIMIT 0 , 10)";
 
         // execute query
         $result = mysqli_query($db, $sql);
-        //echo 'mysql ' . mysqli_num_rows($result);
-        //$result = mysqli_query($db, $sql_select_all);
 
-        if (!$result)
-            //echo "Error: " .  "<br>" . $db->error;
-
-        echo "Numero righe " .mysqli_num_rows($result) ."<br>";
+        $row_counter = 0;
         if (mysqli_num_rows($result) > 0)
         {
             // output data of each row
-            while($row = mysqli_fetch_assoc($result)){
-                //echo "mid_lat " .$mid_lat ." mid_lng " . $mid_lon . "<br>";
-                //echo "id: " . $row["idNode"]. " Lon: " . $row["Lon"]." Lat: " . $row["Lat"]. " Distance: ". $row["distance"] . " radius: " .$LongestSteps [$i]['radius']/2 . "<br>";
-                //echo $LongestSteps [$i]['radius']/2 . " " . distance($mid_lat, $mid_lon, $row["Lat"], $row["Lon"],"K") . "<br>";
-    /*            $local_array = array
+            while($row = mysqli_fetch_assoc($result))
+            {
+                $sql_get_place_info = "(SELECT name, wikipedia FROM place_of_worship WHERE ref=" . $row["idNode"] . ")";
+                $places_result = mysqli_query($db_pow, $sql_get_place_info);
+                $places_row = mysqli_fetch_assoc($places_result);
+
+                $interest_points[$row_counter] = array
                 (
                     "Lat" => $row["Lat"],
-                    "Lon" => $row["Lon"]
-                );*/
-/*
-                $interest_points[$count] = array("Lat" => $row["Lat"] , "Lon" => $row["Lon"]);
-                $count++;*/
+                    "Lon" => $row["Lon"],
+                    "Name" => $places_row["name"],
+                    "Wikipedia" => $places_row["wikipedia"]
+                );
 
-                //array_push($interest_points, $local_array);
+                $row_counter++;
             }
-
-            //echo "<br><br>";
         }
 
         else {
@@ -281,13 +277,9 @@ function find_interest_points($LongestSteps){
 
     }
 
-    //return json_encode($interest_points);
-    //echo 'Numero elementi ' .count($interest_points);
     return $interest_points;
 }
 
-/*function computeInterestPoints()
-{*/
     try
     {
         //$info = get_driving_information('via Tiburtina 538, Roma', 'Piazza Re Di Roma, Roma');
@@ -300,12 +292,20 @@ function find_interest_points($LongestSteps){
         else
             $steps = createJsonFromResponse($info);
 
-        $LongestSteps = selectLongestSteps($steps, 200);
+        $LongestSteps = selectLongestSteps($steps, 100);
         json_encode($LongestSteps);
         $interest_points =  find_interest_points($LongestSteps);
+        $echo_data = [];
 
-        echo json_encode($interest_points);
+        $echo_data[0] = $interest_points;
+        $echo_data[1] = extractLocations($info);
+
+
+        //echo json_encode($interest_points);
+        echo json_encode($echo_data);
+        //echo $echo_data;
         //echo $interest_points;
+        //echo json_encode(extractLocations($info));
 
     }
 

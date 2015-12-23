@@ -31,7 +31,7 @@
             var qparts = url.split("?");
 
             // Check that there is a querystring, return "" if not
-            if (qparts.length == 0)
+            if (qparts.length < 2)
             {
                 return "";
             }
@@ -73,6 +73,18 @@
         }
 
     </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBV5dWSMzIg03y91cUHyUNkwefT5uRSbDY&signed_in=true&callback=initMap">
+    </script>
+
+    <script type='text/javascript' src="init_map.js">
+    </script>
+
+  <!--  <script>
+        window.onload=function(){
+            initMap();
+        }
+    </script>-->
 </head>
 
 
@@ -92,13 +104,10 @@
 
 </h1>
 
+<!--<script type='text/javascript' src="init_map.js">
+</script>-->
 
-<script type='text/javascript' src="init_map.js">
 
-
-</script>
-
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBV5dWSMzIg03y91cUHyUNkwefT5uRSbDY&signed_in=true&callback=initMap"
-        async defer></script>
+<!--<script src="https://maps.googleapis.com/maps/api/js" async defer></script>-->
 </body>
 </html>

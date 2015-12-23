@@ -77,6 +77,8 @@ function calculateRoutes(){
             wCount = 0;
             waypts = new Array();
         }
+
+
         waypts.push
         (
             {
